@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  game-apps:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+    container_name: game-apps
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    environment:
+      - GAME_APPS_DATABASE_DRIVER=mysql
+      - GAME_APPS_DATABASE_MYSQL_HOST=mysql
+      - GAME_APPS_DATABASE_MYSQL_PORT=3306
+      - GAME_APPS_DATABASE_MYSQL_USER=root
+      - GAME_APPS_DATABASE_MYSQL_PASSWORD=password
+      - GAME_APPS_DATABASE_MYSQL_DBNAME=game_apps
+      - GAME_APPS_REDIS_ADDR=redis:6379
+      - GAME_APPS_JWT_SECRET=your-secret-key-here
+    depends_on:
+      - mysql
+      - redis
+    volumes:
+      - ./configs:/app/configs
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: game-apps-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=game_apps
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: game-apps-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  redis_data:
+

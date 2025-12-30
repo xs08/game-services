@@ -1,0 +1,130 @@
+syntax = "proto3";
+
+package game;
+
+option go_package = "github.com/game-apps/api/proto/game";
+
+// 游戏服务
+service GameService {
+  // 创建房间
+  rpc CreateRoom(CreateRoomRequest) returns (CreateRoomResponse);
+  // 加入房间
+  rpc JoinRoom(JoinRoomRequest) returns (JoinRoomResponse);
+  // 离开房间
+  rpc LeaveRoom(LeaveRoomRequest) returns (LeaveRoomResponse);
+  // 获取房间信息
+  rpc GetRoom(GetRoomRequest) returns (GetRoomResponse);
+  // 列出房间
+  rpc ListRooms(ListRoomsRequest) returns (ListRoomsResponse);
+  // 开始游戏
+  rpc StartGame(StartGameRequest) returns (StartGameResponse);
+  // 获取游戏状态
+  rpc GetGameState(GetGameStateRequest) returns (GetGameStateResponse);
+  // 订阅游戏事件（流式）
+  rpc SubscribeGameEvents(SubscribeGameEventsRequest) returns (stream GameEvent);
+}
+
+// 创建房间请求
+message CreateRoomRequest {
+  string name = 1;
+  string game_type = 2;
+  string settings = 3;
+}
+
+// 创建房间响应
+message CreateRoomResponse {
+  Room room = 1;
+}
+
+// 加入房间请求
+message JoinRoomRequest {
+  string room_code = 1;
+}
+
+// 加入房间响应
+message JoinRoomResponse {
+  Room room = 1;
+}
+
+// 离开房间请求
+message LeaveRoomRequest {
+  uint32 room_id = 1;
+}
+
+// 离开房间响应
+message LeaveRoomResponse {
+  bool success = 1;
+}
+
+// 获取房间请求
+message GetRoomRequest {
+  uint32 room_id = 1;
+}
+
+// 获取房间响应
+message GetRoomResponse {
+  Room room = 1;
+}
+
+// 列出房间请求
+message ListRoomsRequest {
+  int32 status = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+// 列出房间响应
+message ListRoomsResponse {
+  repeated Room rooms = 1;
+}
+
+// 开始游戏请求
+message StartGameRequest {
+  uint32 room_id = 1;
+}
+
+// 开始游戏响应
+message StartGameResponse {
+  bool success = 1;
+}
+
+// 获取游戏状态请求
+message GetGameStateRequest {
+  uint32 room_id = 1;
+}
+
+// 获取游戏状态响应
+message GetGameStateResponse {
+  map<string, string> state = 1;
+}
+
+// 订阅游戏事件请求
+message SubscribeGameEventsRequest {
+  uint32 room_id = 1;
+}
+
+// 游戏事件
+message GameEvent {
+  string type = 1;
+  uint32 room_id = 2;
+  uint32 user_id = 3;
+  map<string, string> data = 4;
+  int64 timestamp = 5;
+}
+
+// 房间信息
+message Room {
+  uint32 id = 1;
+  string room_code = 2;
+  string name = 3;
+  uint32 owner_id = 4;
+  int32 status = 5;
+  int32 max_players = 6;
+  int32 current_players = 7;
+  string game_type = 8;
+  string settings = 9;
+  int64 started_at = 10;
+  int64 ended_at = 11;
+  int64 expires_at = 12;
+}
+

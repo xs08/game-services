@@ -1,0 +1,131 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "github.com/game-apps/api/proto/user";
+
+// 用户服务
+service UserService {
+  // 注册
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  // 登录
+  rpc Login(LoginRequest) returns (LoginResponse);
+  // 刷新令牌
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  // 获取用户资料
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  // 更新用户资料
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  // 获取用户统计
+  rpc GetStats(GetStatsRequest) returns (GetStatsResponse);
+}
+
+// 注册请求
+message RegisterRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+  string nickname = 4;
+}
+
+// 注册响应
+message RegisterResponse {
+  uint32 user_id = 1;
+  string token = 2;
+}
+
+// 登录请求
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+// 登录响应
+message LoginResponse {
+  uint32 user_id = 1;
+  string username = 2;
+  string token = 3;
+  string refresh_token = 4;
+}
+
+// 刷新令牌请求
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+// 刷新令牌响应
+message RefreshTokenResponse {
+  string token = 1;
+  string refresh_token = 2;
+}
+
+// 获取用户资料请求
+message GetProfileRequest {
+  uint32 user_id = 1;
+}
+
+// 获取用户资料响应
+message GetProfileResponse {
+  User user = 1;
+  UserProfile profile = 2;
+}
+
+// 更新用户资料请求
+message UpdateProfileRequest {
+  uint32 user_id = 1;
+  string nickname = 2;
+  string avatar = 3;
+  int32 gender = 4;
+  int64 birthday = 5;
+  string bio = 6;
+  string location = 7;
+}
+
+// 更新用户资料响应
+message UpdateProfileResponse {
+  bool success = 1;
+}
+
+// 获取用户统计请求
+message GetStatsRequest {
+  uint32 user_id = 1;
+}
+
+// 获取用户统计响应
+message GetStatsResponse {
+  UserStats stats = 1;
+}
+
+// 用户信息
+message User {
+  uint32 id = 1;
+  string username = 2;
+  string email = 3;
+  string nickname = 4;
+  string avatar = 5;
+  int32 status = 6;
+}
+
+// 用户资料
+message UserProfile {
+  uint32 id = 1;
+  uint32 user_id = 2;
+  int32 gender = 3;
+  int64 birthday = 4;
+  string bio = 5;
+  string location = 6;
+}
+
+// 用户统计
+message UserStats {
+  uint32 id = 1;
+  uint32 user_id = 2;
+  int32 games_played = 3;
+  int32 games_won = 4;
+  int32 games_lost = 5;
+  double win_rate = 6;
+  int64 total_score = 7;
+  int32 level = 8;
+  int64 experience = 9;
+}
+
