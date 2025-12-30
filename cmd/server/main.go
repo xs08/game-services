@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/game-apps/internal/repository/mysql"
 	"github.com/game-apps/internal/repository/postgres"
 	"github.com/game-apps/internal/repository/redis"
+	"github.com/game-apps/internal/service/admin"
 	"github.com/game-apps/internal/service/game"
 	"github.com/game-apps/internal/service/user"
 	"github.com/game-apps/internal/utils"
@@ -199,9 +201,23 @@ func main() {
 		"game:events",
 	)
 
+	// 初始化管理服务
+	// 获取项目根目录（假设配置文件在项目根目录）
+	configBasePath := os.Getenv("PROJECT_ROOT")
+	if configBasePath == "" {
+		// 默认使用当前工作目录的父目录
+		wd, _ := os.Getwd()
+		configBasePath = filepath.Dir(filepath.Dir(wd))
+	}
+
+	configService := admin.NewConfigService(configBasePath)
+	adminUserService := admin.NewUserService(db, cfg.Database.Driver)
+	systemService := admin.NewSystemService(configBasePath)
+
 	// 初始化 HTTP 处理器
 	userHandler := http.NewUserHandler(authService, profileService, statsService)
 	gameHandler := http.NewGameHandler(roomService, sessionService, processService)
+	adminHandler := http.NewAdminHandler(configService, adminUserService, systemService, authService)
 
 	// 初始化 WebSocket Hub
 	wsHub := websocket.NewHub(log)
@@ -209,7 +225,7 @@ func main() {
 
 	// 设置路由
 	router := gin.Default()
-	http.SetupRoutes(router, userHandler, gameHandler, jwtService, log)
+	http.SetupRoutes(router, userHandler, gameHandler, adminHandler, jwtService, log)
 
 	// WebSocket 路由
 	router.GET("/ws", websocket.HandleWebSocket(wsHub, jwtService, log))

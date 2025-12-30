@@ -13,6 +13,7 @@ func SetupRoutes(
 	router *gin.Engine,
 	userHandler *UserHandler,
 	gameHandler *GameHandler,
+	adminHandler *AdminHandler,
 	jwtService *utils.JWTService,
 	logger *zap.Logger,
 ) {
@@ -63,6 +64,37 @@ func SetupRoutes(
 			// 游戏进程
 			game.POST("/rooms/:id/start", gameHandler.StartGame)
 			game.GET("/rooms/:id/state", gameHandler.GetGameState)
+		}
+
+		// 管理接口
+		admin := v1.Group("/admin")
+		{
+			// 管理登录（不需要认证）
+			admin.POST("/auth/login", adminHandler.AdminLogin)
+
+			// 需要认证和管理员权限的接口
+			adminAuth := admin.Group("")
+			adminAuth.Use(middleware.AuthMiddleware(jwtService))
+			adminAuth.Use(middleware.AdminMiddleware())
+			{
+				// 配置管理
+				adminAuth.GET("/config/:service", adminHandler.GetConfig)
+				adminAuth.PUT("/config/:service", adminHandler.UpdateConfig)
+				adminAuth.POST("/config/:service/validate", adminHandler.ValidateConfig)
+				adminAuth.POST("/config/:service/reload", adminHandler.ReloadConfig)
+
+				// 用户管理
+				adminAuth.GET("/users", adminHandler.GetUserList)
+				adminAuth.GET("/users/:id", adminHandler.GetUserDetail)
+				adminAuth.PUT("/users/:id", adminHandler.UpdateUser)
+				adminAuth.PUT("/users/:id/status", adminHandler.UpdateUserStatus)
+
+				// 系统配置
+				adminAuth.GET("/system/config", adminHandler.GetSystemConfig)
+				adminAuth.PUT("/system/config", adminHandler.UpdateSystemConfig)
+				adminAuth.GET("/system/config/:category", adminHandler.GetSystemConfigCategory)
+				adminAuth.PUT("/system/config/:category", adminHandler.UpdateSystemConfigCategory)
+			}
 		}
 	}
 }

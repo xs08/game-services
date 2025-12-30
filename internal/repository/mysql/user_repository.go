@@ -72,6 +72,40 @@ func (r *UserRepository) Delete(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&model.User{}, id).Error
 }
 
+// List 列出用户（支持分页、搜索、状态筛选）
+func (r *UserRepository) List(ctx context.Context, limit, offset int, keyword string, status *string) ([]*model.User, int64, error) {
+	var users []*model.User
+	var total int64
+	query := r.db.WithContext(ctx).Model(&model.User{})
+
+	// 关键词搜索（用户名、邮箱、昵称）
+	if keyword != "" {
+		query = query.Where("username LIKE ? OR email LIKE ? OR nickname LIKE ?",
+			"%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%")
+	}
+
+	// 状态筛选
+	if status != nil {
+		statusInt := 1
+		if *status == "inactive" {
+			statusInt = 2
+		}
+		query = query.Where("status = ?", statusInt)
+	}
+
+	// 获取总数
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// 获取列表
+	if err := query.Order("created_at DESC").Limit(limit).Offset(offset).Find(&users).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return users, total, nil
+}
+
 // UserProfileRepository 用户资料数据访问层
 type UserProfileRepository struct {
 	db *gorm.DB
